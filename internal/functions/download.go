@@ -1,12 +1,15 @@
-package action
+package functions
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/767829413/easy-novel/internal/action/model"
+	"github.com/767829413/easy-novel/internal/crawler"
+	"github.com/767829413/easy-novel/internal/model"
+	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -17,13 +20,13 @@ type download struct {
 	log *logrus.Logger
 }
 
-func NewDownload(l *logrus.Logger) Action {
+func NewDownload(l *logrus.Logger) App {
 	return &download{log: l}
 }
 
 func (d *download) Execute() error {
 	d.log.Info("Starting novel download")
-	color.Green("开始下载小说...")
+	utils.GetColorIns(color.BgGreen).Println("开始下载小说...")
 	// 实现下载小说的逻辑
 	rl, err := readline.New("")
 	if err != nil {
@@ -32,8 +35,7 @@ func (d *download) Execute() error {
 	defer rl.Close()
 
 	// 1. Query
-	blue := color.New(color.FgBlue).SprintFunc()
-	prompt := blue("==> 请输入书名或作者（宁少字别错字）: ")
+	prompt := utils.GetColorIns(color.BgBlue).Sprint("==> 请输入书名或作者（宁少字别错字）: ")
 	rl.SetPrompt(prompt)
 
 	keyword, err := rl.Readline()
@@ -45,7 +47,8 @@ func (d *download) Execute() error {
 		return nil
 	}
 
-	results := []*model.SearchResult{}
+	crawler := crawler.NewNovelCrawler()
+	results := crawler.Search(keyword)
 
 	if len(results) == 0 {
 		return nil
@@ -78,9 +81,8 @@ func (d *download) Execute() error {
 		sr := results[num-1]
 		fmt.Printf("<== 你选择了《%s》(%s)\n", sr.BookName, sr.Author)
 		fmt.Println("==> 0: 重新选择功能")
-		fmt.Println("==> 1: 下载全本")
-		fmt.Println("==> 2: 下载指定章节")
-		fmt.Println("==> 3: 重新输入序号")
+		fmt.Println("==> 1: 开始下载当前全本")
+		fmt.Println("==> 2: 重新输入序号")
 
 		rl.SetPrompt("==> 请输入数字：")
 		actionInput, err := rl.Readline()
@@ -93,41 +95,24 @@ func (d *download) Execute() error {
 			continue
 		}
 
-		if action != 3 {
-			if action == 0 {
-				return nil
-			}
-
-			start, end := 1, int(^uint(0)>>1) // Max int
-			if action == 2 {
-				rl.SetPrompt("==> 请输起始章(最小为1)和结束章，用空格隔开：")
-				rangeInput, err := rl.Readline()
-				if err != nil {
-					return err
-				}
-				rangeInput = strings.TrimSpace(rangeInput)
-				parts := strings.Split(rangeInput, " ")
-				if len(parts) != 2 {
-					return fmt.Errorf("invalid input")
-				}
-				start, err = strconv.Atoi(parts[0])
-				if err != nil {
-					return err
-				}
-				end, err = strconv.Atoi(parts[1])
-				if err != nil {
-					return err
-				}
-			}
-
-			res := end - start
-			fmt.Printf("<== 完成！总耗时 %d s\n", res)
+		switch action {
+		case 0:
 			return nil
+		case 1:
+			start, end := 1, math.MaxInt // Max int
+			res := crawler.Crawl(sr, start, end)
+			fmt.Printf("<== 完成！总耗时 %d s\n", res.TakeTime)
+			return nil
+		case 2:
+			continue
+		default:
+			utils.GetColorIns(color.FgHiRed).Println("无效的选项，请重新输入")
 		}
 	}
 }
 
 func (d *download) printSearchResult(results []*model.SearchResult) {
+
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"序号", "书名", "作者", "最新章节", "最后更新时间"})
 
@@ -141,12 +126,16 @@ func (d *download) printSearchResult(results []*model.SearchResult) {
 		})
 	}
 
-	table.SetBorder(false)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetTablePadding("\t") // tab-separated columns
+	table.SetBorder(true) // 启用边框
+	table.SetCenterSeparator("|")
+	table.SetColumnSeparator("|")
+	table.SetRowSeparator("-")
+	table.SetHeaderLine(true)
+	table.SetTablePadding("\t")                  // tab-separated columns
+	table.SetAlignment(tablewriter.ALIGN_CENTER) // 设置内容居中
+
+	// 启用每行内容上下的边框
+	table.SetRowLine(true)
 
 	table.Render()
 }

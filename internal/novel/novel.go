@@ -4,7 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/767829413/easy-novel/internal/action"
+	"github.com/767829413/easy-novel/internal/functions"
+	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
@@ -16,12 +17,12 @@ const Version = "v0.1"
 func Run(ctx context.Context, log *logrus.Logger) error {
 	log.Info("Starting novel download process")
 	options := []string{"1.下载小说", "2.检查更新", "3.查看配置文件", "4.使用须知", "5.结束程序"}
-	actions := map[string]action.Action{
-		"1": action.NewDownload(log),
-		"2": action.NewCheckUpdate(log, 5000),
-		"3": action.NewPrintConf(log),
-		"4": action.NewPrintHint(log, Version),
-		"5": action.NewExit(log),
+	actions := map[string]functions.App{
+		"1": functions.NewDownload(log),
+		"2": functions.NewCheckUpdate(log, 5000),
+		"3": functions.NewPrintConf(log),
+		"4": functions.NewPrintHint(log, Version),
+		"5": functions.NewExit(log),
 	}
 
 	var completerItems []readline.PrefixCompleterInterface
@@ -54,7 +55,7 @@ func Run(ctx context.Context, log *logrus.Logger) error {
 			index := strings.Split(cmd, ".")[0]
 			action, found := actions[index]
 			if !found {
-				color.Red("无效的选项，请重新选择")
+				utils.GetColorIns(color.FgHiRed).Println("无效的选项，请重新选择")
 				continue
 			}
 
@@ -63,7 +64,7 @@ func Run(ctx context.Context, log *logrus.Logger) error {
 				if err.Error() == "exit" {
 					return nil
 				}
-				color.Red("执行操作时发生错误: %v", err)
+				utils.GetColorIns(color.FgHiRed).Printf("执行操作时发生错误: %v\n", err)
 			}
 		}
 	}
