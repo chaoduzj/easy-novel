@@ -112,9 +112,6 @@ func (nc *novelCrawler) Crawl(res *model.SearchResult, start, end int) *model.Cr
 			chapter,
 			bookDir,
 		)
-		if true {
-			break
-		}
 	}
 	wg.Wait()
 

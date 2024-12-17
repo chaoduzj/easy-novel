@@ -44,7 +44,8 @@ func WriteAsJSON(v interface{}, filename *string) error {
 	}
 
 	// 写入文件
-	realFileName := "./tmp/" + time.Now().Format("20060102150405") + ".json"
+
+	realFileName := fmt.Sprintf("./tmp/%d.json", time.Now().UnixNano())
 	if filename != nil {
 		realFileName = *filename
 	}

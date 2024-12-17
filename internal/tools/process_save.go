@@ -43,7 +43,7 @@ func txtMergeHandler(book *model.Book, dirPath string) error {
 	outputPath := filepath.Join(dirPath, fmt.Sprintf("%s（%s）.txt", book.BookName, book.Author))
 	homePageFile, err := os.Create(outputPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("txtMergeHandler error creating output file: %v", err)
 	}
 	defer homePageFile.Close()
 	// 首页添加书籍信息
@@ -56,22 +56,22 @@ func txtMergeHandler(book *model.Book, dirPath string) error {
 
 	for _, line := range bookInfo {
 		if _, err := homePageFile.WriteString(line + "\n"); err != nil {
-			return err
+			return fmt.Errorf("txtMergeHandler error writing book info: %v", err)
 		}
 	}
 
 	// 合并章节文件
 	filePaths, err := utils.GetSortedFilePaths(dirPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("txtMergeHandler error getting sorted file paths: %v", err)
 	}
 	for _, f := range filePaths {
 		content, err := os.ReadFile(f)
 		if err != nil {
-			return err
+			return fmt.Errorf("txtMergeHandler error reading file: %v", err)
 		}
 		if _, err := homePageFile.Write(content); err != nil {
-			return err
+			return fmt.Errorf("txtMergeHandler error writing file: %v", err)
 		}
 	}
 	return nil
@@ -90,15 +90,13 @@ func epubMergeHandler(book *model.Book, dirPath string) error {
 		return true
 	}, attempts)
 	if len(filePaths) == 0 {
-		utils.GetColorIns(color.FgRed).
-			Printf("《%s》（%s）下载章节数为 0，取消生成 EPUB", book.BookName, book.Author)
-		return nil
+		return fmt.Errorf("epubMergeHandler error getting sorted file paths: %v", err)
 	}
 
 	// 等待文件系统更新索引
 	epubIns, err := epub.NewEpub(book.BookName)
 	if err != nil {
-		return err
+		return fmt.Errorf("epubMergeHandler error creating epub instance: %v", err)
 	}
 	epubIns.SetAuthor(book.Author)
 	epubIns.SetDescription(book.Intro)
@@ -107,7 +105,7 @@ func epubMergeHandler(book *model.Book, dirPath string) error {
 	for _, filePath := range filePaths {
 		content, err := os.ReadFile(filePath)
 		if err != nil {
-			return err
+			return fmt.Errorf("epubMergeHandler error reading file: %v", err)
 		}
 		// 获取文件名
 		fileName := filepath.Base(filePath)
@@ -115,14 +113,14 @@ func epubMergeHandler(book *model.Book, dirPath string) error {
 		// 从文件名中提取标题
 		title := strings.SplitN(fileName, "_", 2)[1]
 		title = strings.TrimSuffix(title, filepath.Ext(title))
-		_, err = epubIns.AddSection(string(content), title, filePath, "")
+		_, err = epubIns.AddSection(string(content), title, "", "")
 		if err != nil {
-			return err
+			return fmt.Errorf("epubMergeHandler error adding section: %v", err)
 		}
 	}
 
 	// 下载封面
-	if len(book.CoverURL) != 0 {
+	if false && len(book.CoverURL) != 0 {
 		fmt.Printf("<== 正在下载封面：%s", book.CoverURL)
 		client := resty.New()
 		resp, err := client.R().Get(book.CoverURL)
@@ -144,11 +142,17 @@ func epubMergeHandler(book *model.Book, dirPath string) error {
 	savePath := filepath.Join(filepath.Dir(dirPath), book.BookName+".epub")
 	err = epubIns.Write(savePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("epubMergeHandler error writing EPUB file: %v", err)
 	}
-	// TODO: 处理 EPUB 格式的临时 HTML ，删除文件
+	// 处理 EPUB 格式的临时 HTML ，删除文件
+	err = os.RemoveAll(dirPath)
+	if err != nil {
+		return fmt.Errorf("epubMergeHandler Error removing temporary HTML files: %v", err)
+	}
 	return nil
 }
+
+// TODO: 实现 HTML 格式的小说合并
 func htmlMergeHandler(book *model.Book, dirPath string) error {
 	return nil
 }

@@ -1,7 +1,10 @@
 package definition
 
 const (
-	NovelTemp_EPUB = `<?xml version="1.0" encoding="UTF-8" ?>
+	NovelTemp_EPUB = `    <h2>{{ .Title }}</h2>
+	{{ .Content }}`
+
+	NovelTemp_EPUB_OLD = `<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN">
 <head>
@@ -27,7 +30,7 @@ const (
   <title>{{ .Title }}</title>
   <meta charset="UTF-8">
   <link href="https://cdn.staticfile.net/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-  <style type="text/css">
+  <style type="text/css"/>
     body {
       max-width: 800px;
       margin: 100px auto;
