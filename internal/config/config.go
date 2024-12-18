@@ -19,14 +19,10 @@ type info struct {
 		LogLevel     string `mapstructure:"log-level"`
 	} `mapstructure:"base"`
 	Crawl struct {
-		Min     int `mapstructure:"min"`
-		Max     int `mapstructure:"max"`
 		Threads int `mapstructure:"threads"`
 	} `mapstructure:"crawl"`
 	Retry struct {
 		MaxAttempts int `mapstructure:"max-attempts"`
-		Min         int `mapstructure:"min"`
-		Max         int `mapstructure:"max"`
 	} `mapstructure:"retry"`
 }
 

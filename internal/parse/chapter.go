@@ -31,21 +31,26 @@ func (b *ChapterParser) Parse(
 ) (err error) {
 	conf := config.GetConf()
 	downOk := false
+	attemptStart := 1
+	attempt := conf.Retry.MaxAttempts
 	// 抓取内容
 	utils.SpinWaitMaxRetryAttempts(
 		func() bool {
 			var err error
+			var errTemp = "==> 正在重试下载失败章节内容: 【%s】，尝试次数: %d/%d，失败原因：%s\n"
 			// 防止重复获取
 			if !downOk {
 				chapter.Content, err = b.crawl(chapter.URL)
 				if err != nil {
 					// 尝试重试
 					fmt.Printf(
-						"==> 正在重试下载失败章节内容: 【%s】，最大尝试次数: %d，失败原因：%s\n",
+						errTemp,
 						chapter.Title,
-						conf.Crawl.Max,
+						attemptStart,
+						attempt,
 						err.Error(),
 					)
+					attemptStart++
 					return false
 				} else {
 					downOk = true
@@ -55,16 +60,18 @@ func (b *ChapterParser) Parse(
 			if err != nil {
 				// 尝试重试
 				fmt.Printf(
-					"==> 正在重试转换失败章节: 【%s】，最大尝试次数: %d，失败原因：%s\n",
+					errTemp,
 					chapter.Title,
-					conf.Crawl.Max,
+					attemptStart,
+					attempt,
 					err.Error(),
 				)
+				attemptStart++
 				return false
 			}
 			return true
 		},
-		conf.Retry.MaxAttempts,
+		attempt,
 	)
 	return nil
 }

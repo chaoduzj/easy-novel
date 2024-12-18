@@ -18,7 +18,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gofrs/uuid v3.1.0+incompatible // indirect
 	github.com/gofrs/uuid/v5 v5.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -34,7 +33,6 @@ require (
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
-	github.com/bmaupin/go-epub v1.1.0
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-shiori/go-epub v1.2.1
 	github.com/gocolly/colly/v2 v2.1.0
