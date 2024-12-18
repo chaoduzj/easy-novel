@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/767829413/easy-novel/internal/crawler"
+	"github.com/767829413/easy-novel/internal/definition"
 	"github.com/767829413/easy-novel/internal/model"
 	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/chzyer/readline"
@@ -80,9 +81,9 @@ func (d *download) Execute() error {
 
 		sr := results[num-1]
 		fmt.Printf("<== 你选择了《%s》(%s)\n", sr.BookName, sr.Author)
-		fmt.Println("==> 0: 重新选择功能")
-		fmt.Println("==> 1: 开始下载当前全本")
-		fmt.Println("==> 2: 重新输入序号")
+		fmt.Printf("==> %d: 重新选择功能", definition.ActionDownload_REOPEN)
+		fmt.Printf("==> %d: 开始下载当前全本", definition.ActionDownload_START)
+		fmt.Printf("==> %d: 重新输入序号", definition.ActionDownload_RESELECT)
 
 		rl.SetPrompt("==> 请输入数字：")
 		actionInput, err := rl.Readline()
@@ -96,14 +97,14 @@ func (d *download) Execute() error {
 		}
 
 		switch action {
-		case 0:
+		case definition.ActionDownload_REOPEN:
 			return nil
-		case 1:
+		case definition.ActionDownload_START:
 			start, end := 1, math.MaxInt // Max int
 			res := crawler.Crawl(sr, start, end)
 			fmt.Printf("<== 完成！总耗时 %d s\n", res.TakeTime)
 			return nil
-		case 2:
+		case definition.ActionDownload_RESELECT:
 			continue
 		default:
 			utils.GetColorIns(color.FgHiRed).Println("无效的选项，请重新输入")
