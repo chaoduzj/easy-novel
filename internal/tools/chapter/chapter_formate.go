@@ -1,4 +1,4 @@
-package tools
+package chapter
 
 import (
 	"regexp"
@@ -7,7 +7,7 @@ import (
 	"github.com/767829413/easy-novel/internal/model"
 )
 
-func FormatForChapter(content string, rule *model.Rule) string {
+func formatForChapter(content string, rule *model.Rule) string {
 	if rule.Chapter.ParagraphTagClosed {
 		if rule.Chapter.ParagraphTag == "p" {
 			return content

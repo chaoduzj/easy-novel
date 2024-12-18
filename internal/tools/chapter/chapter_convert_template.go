@@ -1,60 +1,15 @@
-package tools
+package chapter
 
 import (
 	"bytes"
 	"fmt"
-	"regexp"
-	"strings"
 	"sync"
 	"text/template"
 
 	"github.com/767829413/easy-novel/internal/definition"
-	"github.com/767829413/easy-novel/internal/model"
 )
 
 var templates sync.Map
-
-func ConvertChapter(
-	chapter *model.Chapter,
-	extName string,
-	rule *model.Rule,
-) error {
-	var content string
-	var err error
-	content = FormatForChapter(FilterForChapter(chapter, rule), rule)
-
-	switch extName {
-	case definition.NovelExtname_TXT:
-		content = txtConvert(chapter.Title, content)
-	case definition.NovelExtname_EPUB, definition.NovelExtname_HTML:
-		content, err = templateConvert(chapter.Title, content, extName)
-		if err != nil {
-			return err
-		}
-	}
-	chapter.Content = content
-	return nil
-}
-
-func txtConvert(title, content string) string {
-	// 全角空格，用于首行缩进
-	indent := strings.Repeat("\u3000", 2)
-	// 创建正则表达式
-	re := regexp.MustCompile(`<p>(.*?)</p>`)
-	// 使用strings.Builder来高效构建字符串
-	var result strings.Builder
-	// 查找所有匹配项
-	matches := re.FindAllStringSubmatch(content, -1)
-	for _, match := range matches {
-		result.WriteString(indent)
-		result.WriteString(match[1])
-		result.WriteString("\n")
-	}
-	// 构建最终内容
-	finalContent := fmt.Sprintf("%s\n\n%s", title, result.String())
-
-	return finalContent
-}
 
 func templateConvert(title, content, extName string) (string, error) {
 	tmpl, err := getTemplate(extName)

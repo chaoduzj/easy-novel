@@ -1,4 +1,4 @@
-package tools
+package chapter
 
 import (
 	"regexp"
@@ -8,7 +8,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func FilterForChapter(chapter *model.Chapter, rule *model.Rule) string {
+func filterForChapter(chapter *model.Chapter, rule *model.Rule) string {
 	return newFilterBuilder(chapter).
 		FilterEscape(true).
 		FilterAds(true).

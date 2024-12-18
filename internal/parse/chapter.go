@@ -8,7 +8,7 @@ import (
 	"github.com/767829413/easy-novel/internal/config"
 	"github.com/767829413/easy-novel/internal/model"
 	"github.com/767829413/easy-novel/internal/source"
-	"github.com/767829413/easy-novel/internal/tools"
+	chapterTool "github.com/767829413/easy-novel/internal/tools/chapter"
 	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/gocolly/colly/v2"
 )
@@ -56,7 +56,7 @@ func (b *ChapterParser) Parse(
 					downOk = true
 				}
 			}
-			err = tools.ConvertChapter(chapter, conf.Base.Extname, b.rule)
+			err = chapterTool.ConvertChapter(chapter, conf.Base.Extname, b.rule)
 			if err != nil {
 				// 尝试重试
 				fmt.Printf(

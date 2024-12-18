@@ -12,7 +12,8 @@ import (
 	"github.com/767829413/easy-novel/internal/config"
 	"github.com/767829413/easy-novel/internal/model"
 	"github.com/767829413/easy-novel/internal/parse"
-	"github.com/767829413/easy-novel/internal/tools"
+	chapterTool "github.com/767829413/easy-novel/internal/tools/chapter"
+	mergeTool "github.com/767829413/easy-novel/internal/tools/merge"
 	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/fatih/color"
 )
@@ -105,7 +106,7 @@ func (nc *novelCrawler) Crawl(res *model.SearchResult, start, end int) *model.Cr
 			// 下载逻辑
 			fmt.Printf("<== 正在下载: 【%s】\n", chapter.Title)
 			parse.NewChapterParser(conf.Base.SourceID).Parse(chapter, res, book, bookDir)
-			tools.CreateFileForChapter(chapter, bookDir)
+			chapterTool.CreateFileForChapter(chapter, bookDir)
 			atomic.AddInt32(&nowCatalogsCount, -1)
 			fmt.Printf("<== 下载结束,待下载章节数：%d\n", atomic.LoadInt32(&nowCatalogsCount))
 		}(
@@ -116,7 +117,7 @@ func (nc *novelCrawler) Crawl(res *model.SearchResult, start, end int) *model.Cr
 	wg.Wait()
 
 	// 合并生成小说文件格式
-	err = tools.ProcessSaveHandler(book, dirPath)
+	err = mergeTool.MergeSaveHandler(book, dirPath)
 	if err != nil {
 		utils.GetColorIns(color.BgRed).Printf("<== 执行合并生成小说文件格式失败：%s\n", err.Error())
 		return nil

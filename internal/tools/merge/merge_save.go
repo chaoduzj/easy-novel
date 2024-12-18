@@ -1,4 +1,4 @@
-package tools
+package merge
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"github.com/go-shiori/go-epub"
 )
 
-func ProcessSaveHandler(book *model.Book, dirPath string) error {
+func MergeSaveHandler(book *model.Book, dirPath string) error {
 	conf := config.GetConf()
 	s := fmt.Sprintf("\n<== 《%s》（%s）下载完毕，", book.BookName, book.Author)
 

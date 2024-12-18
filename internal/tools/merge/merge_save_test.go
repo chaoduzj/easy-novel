@@ -1,4 +1,4 @@
-package tools
+package merge
 
 import (
 	"encoding/json"
