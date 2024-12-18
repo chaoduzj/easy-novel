@@ -6,6 +6,7 @@ import (
 
 	"github.com/767829413/easy-novel/internal/config"
 	"github.com/767829413/easy-novel/internal/source"
+	"github.com/767829413/easy-novel/internal/version"
 	"github.com/767829413/easy-novel/pkg/utils"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -26,11 +27,10 @@ func (p *printConf) Execute() error {
 }
 
 type printHint struct {
-	log     *logrus.Logger
-	version string
+	log *logrus.Logger
 }
 
-func NewPrintHint(l *logrus.Logger, version string) App {
+func NewPrintHint(l *logrus.Logger) App {
 	return &printHint{log: l}
 }
 
@@ -54,7 +54,18 @@ func (p *printHint) Execute() error {
 	cyan := utils.GetColorIns(color.FgCyan).SprintFunc()
 	yellow := utils.GetColorIns(color.FgYellow).SprintFunc()
 
-	table.Append([]string{blue(fmt.Sprintf("easy-novel %s （本项目开源且免费）", p.version))})
+	table.Append(
+		[]string{
+			blue(
+				fmt.Sprintf(
+					"easy-novel %s (commit %s, built at %s)\n",
+					version.Version,
+					version.Commit,
+					version.Date,
+				),
+			),
+		},
+	)
 	table.Append([]string{fmt.Sprintf("官方地址：%s", "https://github.com/767829413/easy-novel")})
 	table.Append([]string{cyan(fmt.Sprintf("当前书源：%s (ID: %d)", rule.URL, cfg.Base.SourceID))})
 	table.Append([]string{cyan(fmt.Sprintf("导出格式：%s", cfg.Base.Extname))})

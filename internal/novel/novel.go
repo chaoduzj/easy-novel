@@ -12,8 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const Version = "v0.1"
-
 // Run is the main entry point for the novel downloading logic
 func Run(ctx context.Context, log *logrus.Logger) error {
 	log.Info("Starting novel download process")
@@ -22,7 +20,7 @@ func Run(ctx context.Context, log *logrus.Logger) error {
 		definition.NovelCapability_DOWNLOAD:     functions.NewDownload(log),
 		definition.NovelCapability_CHECK_UPDATE: functions.NewCheckUpdate(log, 5000),
 		definition.NovelCapability_PRINT_CONF:   functions.NewPrintConf(log),
-		definition.NovelCapability_PRINT_HINT:   functions.NewPrintHint(log, Version),
+		definition.NovelCapability_PRINT_HINT:   functions.NewPrintHint(log),
 		definition.NovelCapability_EXIT:         functions.NewExit(log),
 	}
 

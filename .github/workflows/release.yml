@@ -1,0 +1,72 @@
+name: Releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取所有历史记录以便获取正确的提交哈希
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.4'  # 使用你的 Go 版本
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install gox
+        run: go install github.com/mitchellh/gox@latest
+
+      - name: Get version info
+        id: get_version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $env:GITHUB_OUTPUT
+          echo "COMMIT=$(git rev-parse --short HEAD)" >> $env:GITHUB_OUTPUT
+          echo "DATE=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_OUTPUT
+
+      - name: Update version file
+        run: |
+          $version = "${{ steps.get_version.outputs.VERSION }}"
+          $commit = "${{ steps.get_version.outputs.COMMIT }}"
+          $date = "${{ steps.get_version.outputs.DATE }}"
+          $content = @"
+          package version
+
+          var (
+              Version = "$version"
+              Commit  = "$commit"
+              Date    = "$date"
+          )
+          "@
+          Set-Content -Path internal/version/version.go -Value $content
+
+      - name: Build executables
+        shell: powershell
+        run: |
+          mkdir out
+          $env:VERSION = "${{ steps.get_version.outputs.VERSION }}"
+          $env:COMMIT = "${{ steps.get_version.outputs.COMMIT }}"
+          $env:DATE = "${{ steps.get_version.outputs.DATE }}"
+          gox -os="windows linux darwin" -arch="amd64" -output="out/{{.OS}}_{{.Arch}}/easynovel" -ldflags="-X 'github.com/767829413/easy-novel/internal/version.Version=$env:VERSION' -X 'github.com/767829413/easy-novel/internal/version.Commit=$env:COMMIT' -X 'github.com/767829413/easy-novel/internal/version.Date=$env:DATE'" .
+
+      - name: Compress executables
+        run: |
+          Compress-Archive -Path out/windows_amd64 -DestinationPath out/easynovel-windows-amd64.zip
+          tar -czvf out/easynovel-linux-amd64.tar.gz -C out/linux_amd64 .
+          tar -czvf out/easynovel-darwin-amd64.tar.gz -C out/darwin_amd64 .
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "out/*.zip,out/*.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
