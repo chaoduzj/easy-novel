@@ -1,0 +1,56 @@
+[changelog]
+# 设置变更日志的标题
+header = """
+# 变更日志
+
+所有对该项目的显著更改都将记录在此文件中。
+"""
+
+# 设置每个版本的模板
+body = """
+{% if version %}
+## [{{ version | replace(from="v", to="") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}
+## [Unreleased] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {{ commit.message | upper_first }}{% endfor %}
+{% endfor %}
+"""
+# 删除一些不需要的分组
+trim = true
+# 排除一些 commit
+exclude_path = "^(internal)/"
+
+[git]
+# 允许使用常规 commit
+conventional_commits = false
+# 解析 commit 信息的正则表达式
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->⛰️  Features" },
+    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
+    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
+    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
+    { message = "^refactor\\(clippy\\)", skip = true },
+    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
+    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
+    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+    { body = ".*security", group = "<!-- 7 -->🛡️ Security" },
+    { message = "^revert", group = "<!-- 8 -->◀️ Revert" },
+]
+# 解析 commit 作者的正则表达式
+commit_author_parsers = [{ name = ".*", signature = "" }]
+# 不匹配的提交将被过滤掉
+filter_commits = true
+# 忽略一些 commit
+ignore_tags = "^v0\\."
+# 标签前缀
+tag_pattern = "v[0-9]*"
+
+[git.filter]
+# 提交消息中的关键词
+commit_message = "^(feat|fix|doc|perf|refactor|style|test|security|revert)"
+# 提交的文件路径
+commit_files = []
