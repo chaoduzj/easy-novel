@@ -8,6 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	golang.org/x/net v0.29.0
 )
 
 require (
@@ -26,12 +27,12 @@ require (
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
 	github.com/vincent-petithory/dataurl v1.0.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/go-shiori/go-epub v1.2.1
