@@ -1,5 +1,4 @@
 name: Releases
-
 on:
   push:
     tags:
@@ -7,14 +6,14 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取所有历史记录以便获取正确的提交哈希
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -24,49 +23,44 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Install gox
-        run: go install github.com/mitchellh/gox@latest
-
       - name: Get version info
         id: get_version
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $env:GITHUB_OUTPUT
-          echo "COMMIT=$(git rev-parse --short HEAD)" >> $env:GITHUB_OUTPUT
-          echo "DATE=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Update version file
         run: |
-          $version = "${{ steps.get_version.outputs.VERSION }}"
-          $commit = "${{ steps.get_version.outputs.COMMIT }}"
-          $date = "${{ steps.get_version.outputs.DATE }}"
-          $content = @"
+          cat > internal/version/version.go << EOL
           package version
 
           var (
-              Version = "$version"
-              Commit  = "$commit"
-              Date    = "$date"
+              Version = "${{ steps.get_version.outputs.VERSION }}"
+              Commit  = "${{ steps.get_version.outputs.COMMIT }}"
+              Date    = "${{ steps.get_version.outputs.DATE }}"
           )
-          "@
-          Set-Content -Path internal/version/version.go -Value $content
+          EOL
 
       - name: Build executables
-        shell: powershell
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          COMMIT: ${{ steps.get_version.outputs.COMMIT }}
+          DATE: ${{ steps.get_version.outputs.DATE }}
         run: |
-          mkdir out
-          $env:VERSION = "${{ steps.get_version.outputs.VERSION }}"
-          $env:COMMIT = "${{ steps.get_version.outputs.COMMIT }}"
-          $env:DATE = "${{ steps.get_version.outputs.DATE }}"
-          gox -os="windows linux darwin" -arch="amd64" -output="out/{{.OS}}_{{.Arch}}/easynovel" -ldflags="-X 'github.com/767829413/easy-novel/internal/version.Version=$env:VERSION' -X 'github.com/767829413/easy-novel/internal/version.Commit=$env:COMMIT' -X 'github.com/767829413/easy-novel/internal/version.Date=$env:DATE'" .
+          mkdir -p out
+          GOOS=windows GOARCH=amd64 go build -o out/windows_amd64/easynovel.exe -ldflags="-X 'github.com/767829413/easy-novel/internal/version.Version=$VERSION' -X 'github.com/767829413/easy-novel/internal/version.Commit=$COMMIT' -X 'github.com/767829413/easy-novel/internal/version.Date=$DATE'" .
+          GOOS=linux GOARCH=amd64 go build -o out/linux_amd64/easynovel -ldflags="-X 'github.com/767829413/easy-novel/internal/version.Version=$VERSION' -X 'github.com/767829413/easy-novel/internal/version.Commit=$COMMIT' -X 'github.com/767829413/easy-novel/internal/version.Date=$DATE'" .
+          GOOS=darwin GOARCH=amd64 go build -o out/darwin_amd64/easynovel -ldflags="-X 'github.com/767829413/easy-novel/internal/version.Version=$VERSION' -X 'github.com/767829413/easy-novel/internal/version.Commit=$COMMIT' -X 'github.com/767829413/easy-novel/internal/version.Date=$DATE'" .
 
       - name: Compress executables
         run: |
-          Compress-Archive -Path out/windows_amd64 -DestinationPath out/easynovel-windows-amd64.zip
-          tar -czvf out/easynovel-linux-amd64.tar.gz -C out/linux_amd64 .
-          tar -czvf out/easynovel-darwin-amd64.tar.gz -C out/darwin_amd64 .
+          cd out/windows_amd64 && zip -r ../../easynovel-windows-amd64.zip . && cd ../..
+          cd out/linux_amd64 && tar -czvf ../../easynovel-linux-amd64.tar.gz . && cd ../..
+          cd out/darwin_amd64 && tar -czvf ../../easynovel-darwin-amd64.tar.gz . && cd ../..
 
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "out/*.zip,out/*.tar.gz"
+          artifacts: "*.zip,*.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
