@@ -1,4 +1,5 @@
-name: Releases
+name: Release
+
 on:
   push:
     tags:
@@ -59,8 +60,19 @@ jobs:
           cd out/linux_amd64 && tar -czvf ../../easynovel-linux-amd64.tar.gz . && cd ../..
           cd out/darwin_amd64 && tar -czvf ../../easynovel-darwin-amd64.tar.gz . && cd ../..
 
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: --verbose --tag ${{ steps.get_version.outputs.VERSION }}
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "*.zip,*.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
+          body: ${{ steps.git-cliff.outputs.content }}
